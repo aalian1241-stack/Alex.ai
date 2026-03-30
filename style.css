@@ -1,81 +1,74 @@
-:root {
-    --bg: #0b0e14;
-    --card: #161b22;
-    --accent: #58a6ff;
-    --text: #c9d1d9;
+const btn = document.querySelector('#activate-btn');
+const main = document.querySelector('.main-content');
+const userText = document.querySelector('#user-text');
+const aiResponse = document.querySelector('#ai-response');
+const taskList = document.querySelector('#task-list');
+const newsTicker = document.querySelector('#news-ticker');
+
+// 1. Initialize Speech
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+
+// 2. Load Tasks on Start
+let tasks = JSON.parse(localStorage.getItem('alexTasks')) || [];
+updateTaskUI();
+
+// 3. New Feature: Get News
+async function fetchNews() {
+    try {
+        const res = await fetch('https://ok.surf/api/v1/cors/news-feed');
+        const data = await res.json();
+        const headlines = data.World.map(n => n.title).join(" | ");
+        newsTicker.innerText = headlines;
+        return "I've updated the news ticker with the latest world headlines.";
+    } catch (e) { return "I couldn't fetch the news right now."; }
 }
 
-body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    height: 100vh;
-    overflow: hidden;
+// 4. Voice Interaction Logic
+recognition.onstart = () => main.classList.add('listening');
+recognition.onend = () => main.classList.remove('listening');
+
+recognition.onresult = async (event) => {
+    const msg = event.results[0][0].transcript.toLowerCase();
+    userText.innerText = `You: "${msg}"`;
+    
+    let response = "I'm not sure how to do that.";
+    
+    if (msg.includes('add task')) {
+        const task = msg.replace('add task', '').trim();
+        tasks.push(task);
+        localStorage.setItem('alexTasks', JSON.stringify(tasks));
+        updateTaskUI();
+        response = `Added ${task} to your list.`;
+    } 
+    else if (msg.includes('news')) {
+        response = await fetchNews();
+    }
+    else if (msg.includes('weather')) {
+        response = "It's looking clear today with a high of 22 degrees.";
+    }
+    else if (msg.includes('clear tasks')) {
+        clearTasks();
+        response = "Your task list is now empty.";
+    }
+
+    speak(response);
+};
+
+function speak(text) {
+    aiResponse.innerText = text;
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
 }
 
-.app-container {
-    display: grid;
-    grid-template-columns: 250px 1fr;
-    height: calc(100vh - 40px);
+function updateTaskUI() {
+    taskList.innerHTML = tasks.map(t => `<li>${t}</li>`).join('');
 }
 
-.sidebar {
-    background: var(--card);
-    padding: 20px;
-    border-right: 1px solid #30363d;
+function clearTasks() {
+    tasks = [];
+    localStorage.removeItem('alexTasks');
+    updateTaskUI();
 }
 
-#task-list { list-style: none; padding: 0; }
-#task-list li { 
-    background: #21262d; 
-    padding: 10px; 
-    margin-bottom: 8px; 
-    border-radius: 6px;
-    font-size: 14px;
-}
-
-.main-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 40px;
-}
-
-#visualizer {
-    width: 100px; height: 100px;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-    margin-bottom: 20px;
-    transition: 0.3s;
-}
-
-.listening #visualizer {
-    animation: breathe 1.5s infinite;
-}
-
-@keyframes breathe {
-    0%, 100% { transform: scale(1); opacity: 0.5; }
-    50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 30px var(--accent); }
-}
-
-.chat-display { text-align: center; max-width: 500px; }
-#ai-response { color: var(--accent); font-weight: bold; margin-top: 10px; }
-
-#activate-btn {
-    padding: 15px 40px;
-    border-radius: 50px;
-    border: none;
-    background: var(--accent);
-    color: white;
-    font-size: 18px;
-    cursor: pointer;
-    margin-top: 30px;
-}
-
-.news-bar {
-    position: fixed; bottom: 0; width: 100%;
-    background: #238636; color: white;
-    height: 40px; display: flex; align-items: center; padding: 0 20px;
-}
+btn.addEventListener('click', () => recognition.start());
