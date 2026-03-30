@@ -3,23 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alex.ai - Voice Assistant</title>
+    <title>Alex.ai Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="assistant-card">
-        <div class="status-dot" id="status-dot"></div>
-        <h1>Alex.ai</h1>
-        <p id="description">Click the button and say "Hello" or "What time is it?"</p>
-        
-        <div class="display-box">
-            <span id="transcript">Waiting for voice input...</span>
-        </div>
+    <div class="app-container">
+        <aside class="sidebar">
+            <h3>📋 My Tasks</h3>
+            <ul id="task-list"></ul>
+            <button onclick="clearTasks()">Clear All</button>
+        </aside>
 
-        <button id="talk-btn">
-            <span class="icon">🎤</span> Start Listening
-        </button>
+        <main class="main-content">
+            <div class="status-indicator">
+                <div id="visualizer"></div>
+                <h1 id="ai-name">Alex.ai</h1>
+            </div>
+            
+            <div class="chat-display">
+                <p id="user-text">Say "Add task: Buy milk" or "What's the news?"</p>
+                <p id="ai-response"></p>
+            </div>
+
+            <button id="activate-btn">🎤 Listen</button>
+        </main>
     </div>
+
+    <footer class="news-bar">
+        <span>📢 Latest: </span>
+        <marquee id="news-ticker">Alex.ai is ready for your commands...</marquee>
+    </footer>
 
     <script src="script.js"></script>
 </body>
